@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: tkiattisakj9/my-port-api:1.0.0 # ดึงภาพจาก Docker Hub ของคุณ
+          image: tkiattisakj9/my-port-api:25af0593ccb0e3bbe6f320b973887d158a34a657 # ดึงภาพจาก Docker Hub ของคุณ
           ports:
             - containerPort: 3000
           resources:
