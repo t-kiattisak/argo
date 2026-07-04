@@ -1,62 +1,62 @@
-# คู่มือการทดสอบ Argo CD แบบ Local (ด้วย Docker/Kubernetes)
+# Local Testing Guide for Argo CD (with Docker/Kubernetes)
 
-การทดสอบ GitOps Repository นี้บนเครื่องคอมพิวเตอร์ของคุณ (Local Machine) สามารถทำได้โดยง่ายผ่าน **Docker Desktop** หรือ **Kind (Kubernetes in Docker)** โดยเราได้เตรียมไฟล์คอนฟิกน้ำหนักเบาสำหรับทดสอบไว้ให้แล้ว (`values-local.yaml`)
+Testing this GitOps repository on your local machine is easy using **Docker Desktop** or **Kind (Kubernetes in Docker)**. We have prepared a lightweight configuration file (`values-local.yaml`) for local testing.
 
 ---
 
-## 🛠️ สิ่งที่ต้องมีก่อนเริ่ม (Prerequisites)
+## 🛠️ Prerequisites
 
-1. **Docker Desktop** ติดตั้งและเปิดใช้งานอยู่
-2. **Kubernetes Cluster (Local)**:
-   * **ทางเลือกที่ 1 (แนะนำสำหรับ Mac/Windows)**: เปิดใช้งาน Kubernetes ใน Docker Desktop (ไปที่ Settings -> Kubernetes -> ติ๊กถูก "Enable Kubernetes" -> Apply & Restart)
-   * **ทางเลือกที่ 2 (สำหรับสาย Terminal)**: ติดตั้ง [Kind](https://kind.sigs.k8s.io/) แล้วสร้างคลัสเตอร์ด้วยคำสั่ง:
+1. **Docker Desktop** installed and running.
+2. **Local Kubernetes Cluster**:
+   * **Option 1 (Recommended for Mac/Windows)**: Enable Kubernetes in Docker Desktop (Go to Settings -> Kubernetes -> Check "Enable Kubernetes" -> Click "Apply & Restart").
+   * **Option 2 (For Terminal users)**: Install [Kind](https://kind.sigs.k8s.io/) and create a cluster:
      ```bash
      kind create cluster --name argo-test
      ```
-3. **kubectl**: CLI สำหรับจัดการ Kubernetes
-4. **Helm**: CLI สำหรับดาวน์โหลดและจัดการ Helm Chart
+3. **kubectl**: CLI tool for managing Kubernetes.
+4. **Helm**: CLI tool for downloading and managing Helm charts.
 
 ---
 
-## 🚀 ขั้นตอนการทดสอบ
+## 🚀 Testing Steps
 
-### 1. ติดตั้ง Argo CD แบบ Local (ลดขนาดสเปกเพื่อประหยัด RAM)
+### 1. Install Argo CD Locally (Reduced specs to save RAM)
 
-เปิด Terminal ในโฟลเดอร์โปรเจกต์นี้ แล้วรันคำสั่ง:
+Open your Terminal in this project directory and run:
 
 ```bash
-# 1. สร้าง Namespace สำหรับ Argo CD
+# 1. Create a namespace for Argo CD
 kubectl create namespace argocd
 
-# 2. เพิ่ม Helm Repository ของ Argo
+# 2. Add and update the Argo Helm Repository
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 
-# 3. ติดตั้ง Argo CD โดยใช้ config สำหรับทดสอบในเครื่อง (ปิด HA และเปิดใช้งาน Admin User)
+# 3. Install Argo CD using the local config (disables HA and enables Admin User)
 helm upgrade --install argocd argo/argo-cd \
   --namespace argocd \
   -f argocd-install/values-local.yaml
 ```
 
-ตรวจสอบสถานะของ Pods จนกระทั่งเปลี่ยนเป็น `Running` ทั้งหมด:
+Verify that all Pods are up and running:
 ```bash
 kubectl get pods -n argocd
 ```
 
 ---
 
-## 🔓 การลบทรัพยากรออกหลังทดสอบเสร็จ
+## 🔓 Clean Up Resources
 
-เมื่อทดสอบเสร็จสิ้นและต้องการคืนทรัพยากร RAM/CPU ให้กับคอมพิวเตอร์ของคุณ:
+Once you are done testing and want to reclaim RAM/CPU resources:
 
 ```bash
-# ลบแอปพลิเคชันทดสอบ
+# Delete the test application namespace
 kubectl delete namespace my-api-prod
 
-# ถอนการติดตั้ง Argo CD
+# Uninstall Argo CD
 helm uninstall argocd -n argocd
 kubectl delete namespace argocd
 
-# หากใช้ Kind คลัสเตอร์ สามารถลบคลัสเตอร์ทิ้งได้ทันที
+# If using Kind, you can delete the cluster directly
 kind delete cluster --name argo-test
 ```
