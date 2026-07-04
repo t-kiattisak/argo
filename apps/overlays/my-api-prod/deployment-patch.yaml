@@ -1,0 +1,19 @@
+# Patch เพื่อปรับค่าสำหรับ Production Environment เท่านั้น
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-api
+spec:
+  replicas: 3 # เพิ่ม replica สำหรับ production เพื่อรองรับ High Availability
+  template:
+    spec:
+      containers:
+        - name: web
+          resources:
+            # ปรับสเกล resource requests/limits ให้สูงขึ้นใน Production
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi

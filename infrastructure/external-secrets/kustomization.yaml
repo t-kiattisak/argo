@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - sample-secret-store.yaml
+
+helmCharts:
+  - name: external-secrets
+    repo: https://charts.external-secrets.io
+    version: 0.9.18
+    releaseName: external-secrets
+    namespace: external-secrets
+    valuesInline:
+      installCRDs: true
+      replicaCount: 2
+      webhook:
+        replicaCount: 2
+      certController:
+        replicaCount: 2

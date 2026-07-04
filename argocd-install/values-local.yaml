@@ -1,0 +1,66 @@
+# Values for Local Development/Testing on Docker Desktop or Kind
+# Disables High Availability (HA) to save local resources.
+
+global:
+  logging:
+    level: debug
+
+# API Server (Single Replica)
+server:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+  ingress:
+    enabled: false # ใช้ Port-Forward แทนในระดับ Local เพื่อความสะดวก
+
+# Repo Server (Single Replica)
+repoServer:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+# Application Controller (Single Replica)
+controller:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# ApplicationSet Controller
+applicationSet:
+  replicaCount: 1
+
+# Enable single Redis instance for local testing
+redis:
+  enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Disable Redis HA
+redis-ha:
+  enabled: false
+
+# Enable admin user for easy local testing
+configs:
+  cm:
+    admin.enabled: "true"

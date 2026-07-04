@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # ClusterIssuer definition for Let's Encrypt
+  - cluster-issuer.yaml
+
+helmCharts:
+  - name: cert-manager
+    repo: https://charts.jetstack.io
+    version: v1.15.0
+    releaseName: cert-manager
+    namespace: cert-manager
+    includeCRDs: true
+    valuesInline:
+      installCRDs: true
+      replicaCount: 2
+      webhook:
+        replicaCount: 2
+      cainjector:
+        replicaCount: 2

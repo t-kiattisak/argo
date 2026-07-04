@@ -1,0 +1,143 @@
+# Production High Availability (HA) Values for Argo CD Helm Chart
+# Chart: argo/argo-cd (https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd)
+
+global:
+  logging:
+    level: info
+    format: json
+
+# 1. API Server (argocd-server)
+server:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 75
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Enable Ingress for accessing Argo CD UI
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      # cert-manager integration
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - argocd.example.com # เปลี่ยนเป็น Domain ที่ต้องการใช้งาน
+    tls:
+      - secretName: argocd-server-tls
+        hosts:
+          - argocd.example.com
+
+# 2. Repo Server (argocd-repo-server)
+# Handles Git cloning and manifests generation (Kustomize, Helm, etc.)
+repoServer:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 70
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+# 3. Application Controller
+# Reconciles actual state vs target state
+controller:
+  # Note: Application controller does active-passive failover by default,
+  # or active-active if multi-cluster sharding is enabled.
+  replicas: 1
+  
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+# 4. ApplicationSet Controller
+applicationSet:
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# 5. Redis HA (Sentinel Setup)
+# Highly available Redis cluster
+redis-ha:
+  enabled: true
+  redis:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+  sentinel:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 64Mi
+      requests:
+        cpu: 50m
+        memory: 32Mi
+
+# Disable single non-HA redis
+redis:
+  enabled: false
+
+# 6. SSO and RBAC Configuration (Dex Integration)
+configs:
+  # General settings (argocd-cm)
+  cm:
+    url: https://argocd.example.com
+    admin.enabled: "false" # ปิด admin user ใน production เพื่อบังคับใช้ SSO เท่านั้น
+    
+    # ตัวอย่าง OIDC Configuration (สามารถนำไปประยุกต์ใช้กับ Google Workspace, Okta, Azure AD)
+    # oidc.config: |
+    #   name: Google Workspace
+    #   issuer: https://accounts.google.com
+    #   clientID: YOUR_CLIENT_ID.apps.googleusercontent.com
+    #   clientSecret: $oidc.google.clientSecret # เก็บใน Kubernetes Secret ชื่อ argocd-secret
+    #   requestedScopes: ["openid", "profile", "email"]
+
+  # RBAC settings (argocd-rbac-cm)
+  rbac:
+    user.info.class: "oidc"
+    policy.default: role:readonly # สิทธิ์ตั้งต้นสำหรับทุกคนที่ล็อกอินเข้ามา
+    policy.csv: |
+      # Format: p, sub, res, act, obj, eft
+      
+      # Group mappings สำหรับ Admin
+      g, admin-group@example.com, role:admin
+      
+      # Group mappings สำหรับ Developers
+      g, developer-group@example.com, role:developer
+      
+      # สิทธิ์พิเศษสำหรับ Developer Role
+      p, role:developer, applications, get, */*, allow
+      p, role:developer, applications, sync, */*, allow
+      p, role:developer, applications, update, */*, allow
+      p, role:developer, repositories, get, *, allow
