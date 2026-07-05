@@ -5,9 +5,9 @@ metadata:
   labels:
     app: my-api
   annotations:
-    git/commit-sha: fc59f4b55eb6b1e7ae0e3dc588d64687bf326e02
+    git/commit-sha: a834faf67e4a04669975f295fc1709cd7270aefb
     git/author: t-kiattisak
-    git/build-url: https://github.com/t-kiattisak/my-port/actions/runs/28714933933
+    git/build-url: https://github.com/t-kiattisak/my-port/actions/runs/28726860142
 spec:
   replicas: 1
   selector:
@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: tkiattisakj9/my-port-api:fc59f4b55eb6b1e7ae0e3dc588d64687bf326e02 # ดึงภาพจาก Docker Hub ของคุณ
+          image: tkiattisakj9/my-port-api:a834faf67e4a04669975f295fc1709cd7270aefb # ดึงภาพจาก Docker Hub ของคุณ
           ports:
             - containerPort: 3000
           resources:
